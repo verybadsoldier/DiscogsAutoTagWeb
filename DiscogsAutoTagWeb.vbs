@@ -45,18 +45,18 @@ Const VersionStr = "v5.83"
 
 
 'Changes from 5.73 to 5.74 by crap_inhuman in 04.2020
-'	The following chars ¥ , ` , í , ë , î , ì are replaced by '
+'	The following chars ¬¥ , ` , ‚Äô , ‚Äò , ‚Äù , ‚Äú are replaced by '
 '	Fixed tracknumber bug
 '	Changed the matching method (Thanks to DJ Samhein)
 
 
 'Changes from 5.72 to 5.73 by crap_inhuman in 04.2020
 '	Fixed trackname-bug
-'	A í will now replaced by ' , too
+'	A ‚Äô will now replaced by ' , too
 
 
 'Changes from 5.71 to 5.72 by crap_inhuman in 04.2020
-'	Added option to replace a ¥ and ` with a '
+'	Added option to replace a ¬¥ and ` with a '
 '	Added option to search at Metal-Archives.com
 '	Removed issues with multi-disc albums, need MediaMonkey Version 4.1.28.1905 or above
 
@@ -301,7 +301,7 @@ Const VersionStr = "v5.83"
 'Changes from 5.21 to 5.22 by crap_inhuman in 03.2015
 '	Bug removed: mm hangs while downloading covers
 '	Bug removed: the tags will be written, while cover is saving
-'	The common filename masks are implemented (Title, Artist, AlbumArtist,Ö)
+'	The common filename masks are implemented (Title, Artist, AlbumArtist,‚Ä¶)
 
 
 'Changes from 5.20 to 5.21 by crap_inhuman in 03.2015
@@ -565,7 +565,7 @@ Const VersionStr = "v5.83"
 '	The Script now reads the saved Discogs Release-ID from the chosen Release-Tag
 
 ' ToDo: Add more tooltips to the html
-'		Mediamonkey Bug: Erster und letzter Buchstabe in SearchArtist fehlt (wenn n‰chster Buchstabe blank ist e.g. "3 doors down", "Miss may i")
+'		Mediamonkey Bug: Erster und letzter Buchstabe in SearchArtist fehlt (wenn n√§chster Buchstabe blank ist e.g. "3 doors down", "Miss may i")
 '		Wrong Publisher, Producer, etc. in Subtracks. The script only take the info from the first subtrack..
 '		Adding Artist-Alias in Musicbrainz search
 
@@ -1073,7 +1073,7 @@ Sub StartSearchType(Panel, SearchTerm, SearchArtist, SearchAlbum, SearchType)
 	MediaTypeList.Add "Flexi-disc"
 	MediaTypeList.Add "Lathe Cut"
 	MediaTypeList.Add "Shellac"
-	MediaTypeList.Add "PathÈ Disc"
+	MediaTypeList.Add "Path√© Disc"
 	MediaTypeList.Add "Edison Disc"
 	MediaTypeList.Add "Cylinder"
 	MediaTypeList.Add "CDr"
@@ -1233,9 +1233,9 @@ Sub StartSearchType(Panel, SearchTerm, SearchArtist, SearchAlbum, SearchType)
 	CountryList.Add "Congo (the Democratic Republic of the)"
 	CountryList.Add "Cook Islands"
 	CountryList.Add "Costa Rica"
-	CountryList.Add "CÙte d'Ivoire"
+	CountryList.Add "C√¥te d'Ivoire"
 	CountryList.Add "Croatia"
-	CountryList.Add "CuraÁao"
+	CountryList.Add "Cura√ßao"
 	CountryList.Add "Cyprus"
 	CountryList.Add "Czech Republic"
 	CountryList.Add "Czechoslovakia"
@@ -1349,11 +1349,11 @@ Sub StartSearchType(Panel, SearchTerm, SearchArtist, SearchAlbum, SearchType)
 	CountryList.Add "Portugal"
 	CountryList.Add "Puerto Rico"
 	CountryList.Add "Qatar"
-	CountryList.Add "RÈunion"
+	CountryList.Add "R√©union"
 	CountryList.Add "Romania"
 	CountryList.Add "Russian Federation"
 	CountryList.Add "Rwanda"
-	CountryList.Add "Saint BarthÈlemy"
+	CountryList.Add "Saint Barth√©lemy"
 	CountryList.Add "Saint Helena, Ascension and Tristan da Cunha"
 	CountryList.Add "Saint Kitts and Nevis"
 	CountryList.Add "Saint Lucia"
@@ -1404,7 +1404,7 @@ Sub StartSearchType(Panel, SearchTerm, SearchArtist, SearchAlbum, SearchType)
 	CountryList.Add "Uruguay"
 	CountryList.Add "Uzbekistan"
 	CountryList.Add "Vanuatu"
-	CountryList.Add "Venezuela, Bolivarian Republic of†"
+	CountryList.Add "Venezuela, Bolivarian Republic of¬†"
 	CountryList.Add "Viet Nam"
 	CountryList.Add "Virgin Islands (British)"
 	CountryList.Add "Virgin Islands (U.S.)"
@@ -3698,6 +3698,41 @@ Sub ReloadResults
 			End If
 			WriteLog "theformat=" & theFormat
 
+			Dim theFormatSplit, albumType, numFormatSplits, albumSuffix, lastFormat
+			theFormatSplit = Split(theFormat, ",")
+			numFormatSplits = UBound(theFormatSplit)
+
+			WriteLog "numFormatSplits=" & numFormatSplits
+
+			' Promo, EP, Compilation, Single, CDM, CDS
+			lastFormat = Trim(theFormatSplit(numFormatSplits))
+			if (InStr(theFormat, "12""") OR InStr(theFormat, "7""") OR InStr(theFormat, "10""")) AND InStr(theFormat, "Album") = 0 AND InStr(theFormat, "EP") = 0 Then
+				albumSuffix = theCatalogs
+			Else
+				Dim subTypes
+				subTypes = Array("EP", "CDM", "Single", "CDS", "Compilation", "Mini-Album", "Promo")
+				For Each t in subTypes
+					if InStr(theFormat, t) > 0 Then
+						albumSuffix = t
+					End If
+				Next
+
+				'if numFormatSplits >= 2 Then
+				'	if lastFormat <> "Album" Then
+				'		albumSuffix = lastFormat
+				'	End If
+				'End If
+			End If
+			
+			
+			if albumSuffix <> "" Then
+				Dim albumSplit
+				albumSplit = Split(AlbumTitle, " ")
+				if albumSplit(UBound(albumSplit)) <> albumSuffix Then
+					AlbumTitle = AlbumTitle & " [" & albumSuffix  & "]"
+				End If
+			End If
+      
 			' Get Comment
 			If CurrentRelease.Exists("notes") Then
 				Comment = CurrentRelease("notes")
@@ -4626,7 +4661,7 @@ Sub ReloadResults
 							SDB.Tools.WebSearch.NewTracks.Item(i).Title = Tracks.Item(j)
 							WriteLog "Tracks.Item(j)=" & Tracks.Item(j) & " - j=" & j
 						Else
-							WriteLog "Trackname nicht gew‰hlt=" & SDB.Tools.WebSearch.NewTracks.Item(i).Title
+							WriteLog "Trackname nicht gew√§hlt=" & SDB.Tools.WebSearch.NewTracks.Item(i).Title
 							SDB.Tools.WebSearch.NewTracks.Item(i).Title = SDB.Tools.WebSearch.NewTracks.Item(i).Title
 						End If
 						If CheckArtist And ((CheckDontFillEmptyFields = True And ArtistTitles.Item(j) <> "") Or CheckDontFillEmptyFields = False) Then SDB.Tools.WebSearch.NewTracks.Item(i).ArtistName = ArtistTitles.Item(j)
