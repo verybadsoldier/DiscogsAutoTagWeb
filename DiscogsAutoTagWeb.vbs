@@ -2,7 +2,11 @@ Option Explicit
 '
 ' Discogs Tagger Script for MediaMonkey ( Let & eepman & crap_inhuman )
 '
-Const VersionStr = "v5.83"
+Const VersionStr = "v5.84"
+
+'Changes from 5.83 to 5.84 by crap_inhuman in 01.2024
+'	Added option to select all images
+
 
 'Changes from 5.82 to 5.83 by crap_inhuman in 09.2023
 '	Changed the detection of URL in search string
@@ -8257,6 +8261,16 @@ Sub MoreImages()
 	Btn2.UseScript = Script.ScriptPath
 	Btn2.ModalResult = 1 
 	Btn2.Default = True
+	
+	Dim Btn3 : Set Btn3 = SDB.UI.NewButton(Foot)
+	Btn3.Common.ControlName = "Btn3"
+	Btn3.Caption = SDB.Localize("Select All")
+	Btn3.Common.Width = 85
+	Btn3.Common.Height = 25
+	Btn3.Common.Left = Btn2.Common.Left - Btn3.Common.Width -5
+	Btn3.Common.Top = 6
+	Btn3.Common.Anchors = 2+4
+	Script.RegisterEvent Btn3, "OnClick", "SelectAllClick"
 
 	Set WebBrowser3 = UI.NewActiveX(Form, "Shell.Explorer")
 	WebBrowser3.Common.Align = 5      ' Fill whole client rectangle
@@ -8292,6 +8306,20 @@ Sub MoreImages()
 	WebBrowser3.Common.DestroyControl      ' Destroy the external control
 	Set WebBrowser3 = Nothing              ' Release global variable
 	SDB.Objects("WebBrowser3") = Nothing
+
+End Sub
+
+
+Sub SelectAllClick()
+
+	Dim imageHTMLDoc, saveimagebutton, i
+	Set WebBrowser3 = SDB.Objects("WebBrowser3")
+	Set imageHTMLDoc = WebBrowser3.Interf.Document
+
+	For i = 0 To ImageList.Count - 1
+		Set saveimagebutton = imageHTMLDoc.getElementById("SaveImage" & i)
+		saveimagebutton.checked = 1
+	Next
 
 End Sub
 
