@@ -2,7 +2,15 @@ Option Explicit
 '
 ' Discogs Tagger Script for MediaMonkey ( Let & eepman & crap_inhuman )
 '
-Const VersionStr = "v5.84"
+Const VersionStr = "v5.86"
+
+'Changes from 5.85 to 5.86 by crap_inhuman in 11.2024
+'	Fixed NUL bug from empty tags
+
+
+'Changes from 5.84 to 5.85 by crap_inhuman in 10.2024
+'	Added NUL country filter
+
 
 'Changes from 5.83 to 5.84 by crap_inhuman in 01.2024
 '	Added option to select all images
@@ -3677,6 +3685,7 @@ Sub ReloadResults
 			' Get Country
 			If CurrentRelease.Exists("country") Then
 				theCountry = CurrentRelease("country")
+				If isNull(theCountry) = true then theCountry = ""
 			Else
 				theCountry = ""
 			End If
@@ -3752,6 +3761,17 @@ Sub ReloadResults
 				DataQuality = ""
 			End If
 			WriteLog "DataQuality=" & DataQuality
+			
+			If isNull(AlbumArtistTitle) = true then AlbumArtistTitle = ""
+			If isNull(AlbumArtist) = true then AlbumArtist = ""
+			If isNull(AlbumTitle) = true then AlbumTitle = ""
+			If isNull(ReleaseDate) = true then ReleaseDate = ""
+			If isNull(OriginalDate) = true then OriginalDate = ""
+			If isNull(theLabels) = true then theLabels = ""
+			If isNull(theCountry) = true then theCountry = ""
+			If isNull(theFormat) = true then theFormat = ""
+			If isNull(DataQuality) = true then DataQuality = ""	
+	
 		End If
 
 '-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
@@ -4310,6 +4330,7 @@ Sub ReloadResults
 			' Get Country
 			If CurrentRelease.Exists("country") And CurrentRelease("country") <> "" Then
 				theCountry = CurrentRelease("country")
+				If isNull(theCountry) = true then theCountry = ""
 				For f = 1 To CountryCode.Count
 					If theCountry = CountryCode.Item(f) Then
 						theCountry = CountryList.Item(f)
@@ -5812,7 +5833,7 @@ Function GetHeader()
 	templateHTML = templateHTML &  "<table border=0 cellspacing=0 cellpadding=2 class=tabletext>"
 	REM templateHTML = templateHTML &  "<tr><td colspan=5></td><td><b>Filter Results: </b></td><td colspan=3> </td></tr>"
 	If QueryPage = "MetalArchives" Then
-		templateHTML = templateHTML &  "<tr><td colspan=4></td><td><button type=button class=tabletext id=""showadvancedsearch"">Manual Search</button></td><td colspan=2><b>Filter Results: Filter aren't working with MetalArchives!</b></td><td colspan=2> </td>"
+		templateHTML = templateHTML &  "<tr><td colspan=3></td><td><button type=button class=tabletext style=""background-color:red;color:white"" id=""PleaseWaitButton"">Please wait for collection data..</button></td><td><button type=button class=tabletext id=""showadvancedsearch"">Manual Search</button></td><td colspan=2><b>Filter Results: Filter aren't working with MetalArchives!</b></td><td colspan=2> </td>"
 	Else
 		templateHTML = templateHTML &  "<tr><td colspan=2></td><td><button type=button class=tabletext style=""background-color:red;color:white"" id=""PleaseWaitButton"">Please wait for collection data..</button></td><td align=center><img src=""" & SDB.ScriptsPath & "question-mark.png"" alt=""Click here for Help !"" id=""picture""></td><td><button type=button class=tabletext id=""showadvancedsearch"">Manual Search</button></td><td><b>Filter Results: </b></td><td colspan=3> </td>"
 	End If
@@ -7000,6 +7021,7 @@ Function JSONParser_find_result(searchURL, ArrayName, SendArtist, SendAlbum, Sen
 				TXTEnd = InStr(ResponseHTML, ",")
 				MAReleases = Left(ResponseHTML, TXTEnd -1)
 				WriteLog "Anzahl=" & MAReleases
+				If LimitReleases < MAReleases Then MAReleases = LimitReleases
 				If MAReleases = 1 Then
 					TXTBegin = InStr(ResponseHTML, "\" & Chr(34) & ">")
 					If TXTBegin > 1 Then
@@ -7228,6 +7250,7 @@ Function JSONParser_find_result(searchURL, ArrayName, SendArtist, SendAlbum, Sen
 
 					If CurrentRelease.Exists("country") And Not IsNull(CurrentRelease("country")) Then
 						country = CurrentRelease("country")
+						If isNull(country) = true then country = ""
 						For f = 1 To CountryCode.Count
 							If country = CountryCode.Item(f) Then
 								country = CountryList.Item(f)
@@ -9663,7 +9686,7 @@ End Sub
 
 Function LeadingZeroDisc(TestNumber)
 
-	If CheckLeadingZeroDisc = False Then
+	If CheckLeadingZeroDisc = False Or TestNumber = "" Then
 		LeadingZeroDisc = TestNumber
 	Else
 		If IsInteger(TestNumber) Then
