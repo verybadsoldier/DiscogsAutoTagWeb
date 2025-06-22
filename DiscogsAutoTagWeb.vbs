@@ -3711,7 +3711,7 @@ Sub ReloadResults
 			End If
 			WriteLog "theformat=" & theFormat
 
-			Dim theFormatSplit, albumType, numFormatSplits, albumSuffix, lastFormat
+			Dim theFormatSplit, albumType, numFormatSplits, albumSuffix, catalogSuffix, lastFormat
 			theFormatSplit = Split(theFormat, ",")
 			numFormatSplits = UBound(theFormatSplit)
 
@@ -3720,31 +3720,50 @@ Sub ReloadResults
 			' Promo, EP, Compilation, Single, CDM, CDS
 			lastFormat = Trim(theFormatSplit(numFormatSplits))
 			if (InStr(theFormat, "12""") OR InStr(theFormat, "7""") OR InStr(theFormat, "10""")) AND InStr(theFormat, "Album") = 0 AND InStr(theFormat, "EP") = 0 Then
-				albumSuffix = theCatalogs
-			Else
-				Dim subTypes
-				subTypes = Array("EP", "CDM", "Single", "CDS", "Compilation", "Mini-Album", "Promo")
-				For Each t in subTypes
-					if InStr(theFormat, t) > 0 Then
-						albumSuffix = t
-					End If
-				Next
+				catalogSuffix = theCatalogs
+			End If
+      
+      Dim subTypes
+      ' We can have multiple, e.g. "PromoEP"
+      subTypes = Array("Promo", "EP", "CDM", "Single", "CDS", "Compilation", "Mini-Album", "12""", "10""", "7""")
+      For Each t in subTypes
+        if InStr(theFormat, t) > 0 Then
+          if t = "12""" Then
+            t = "12in"
+          End If
+          if t = "10""" Then
+            t = "10in"
+          End If
+          if t = "7""" Then
+            t = "7in"
+          End If
+          albumSuffix = albumSuffix & t
+        End If
+      Next			
+			
+      ' Check if albumSuffix is alreay part of the album title and delete it if that is the case
+      Dim albumSplit
+      albumSplit = Split(AlbumTitle, " ")
+			if albumSplit(UBound(albumSplit)) = albumSuffix Then
+				 albumSuffix = ""
+			End If
+        
+			if catalogSuffix <> "" OR albumSuffix <> "" Then
+        Dim tmpSuffix
+        
+        if albumSuffix <> "" Then
+          tmpSuffix = albumSuffix
+        End If
 
-				'if numFormatSplits >= 2 Then
-				'	if lastFormat <> "Album" Then
-				'		albumSuffix = lastFormat
-				'	End If
-				'End If
-			End If
-			
-			
-			if albumSuffix <> "" Then
-				Dim albumSplit
-				albumSplit = Split(AlbumTitle, " ")
-				if albumSplit(UBound(albumSplit)) <> albumSuffix Then
-					AlbumTitle = AlbumTitle & " [" & albumSuffix  & "]"
-				End If
-			End If
+        if catalogSuffix <> "" Then
+          if tmpSuffix <> "" Then
+            tmpSuffix = tmpSuffix & ","
+          End If
+          tmpSuffix = tmpSuffix & catalogSuffix
+        End If 
+
+        AlbumTitle = AlbumTitle & " [" & tmpSuffix & "]"
+      End If
       
 			' Get Comment
 			If CurrentRelease.Exists("notes") Then
